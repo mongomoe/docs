@@ -484,6 +484,20 @@ Authentication Parameters
    impact benign login attempts if the server is denying access to many
    other clients simultaneously.
 
+.. parameter:: allowRolesFromX509Certificates
+
+   *Default*: true
+
+   |both|
+
+   *Available starting in MongoDB 4.0.11 (and 3.6.14 and 3.4.22)*
+
+   A boolean flag that allows or disallows the retrieval of
+   authorization roles from client x.509 certificates.
+
+   You can only set :parameter:`allowRolesFromX509Certificates` during
+   startup in the config file or on the command line.
+
 General Parameters
 ~~~~~~~~~~~~~~~~~~
 
@@ -1491,6 +1505,60 @@ Logical Session Parameters
 Replication Parameters
 ~~~~~~~~~~~~~~~~~~~~~~
 
+.. parameter:: enableFlowControl
+
+   .. versionadded:: 4.2
+
+   *Type*: boolean
+
+   *Default*: true
+   
+   Enables or disables the mechanism that controls the rate at which the
+   primary applies its writes with the goal of keeping the secondary members'
+   :data:`majority committed
+   <replSetGetStatus.optimes.lastCommittedOpTime>` lag under a
+   configurable maximum value.
+
+   .. note::
+
+      .. include:: /includes/extracts/4.2-changes-flow-control-requirements.rst
+
+.. parameter:: flowControlTargetLagSeconds
+
+   .. versionadded:: 4.2
+
+   *Type*: integer
+
+   *Default*: 10
+   
+   The target maximum :data:`majority committed
+   <replSetGetStatus.optimes.lastCommittedOpTime>` lag when running
+   with flow control. When flow control is enabled, the mechanism
+   attempts to keep the :data:`majority committed
+   <replSetGetStatus.optimes.lastCommittedOpTime>` lag under
+   the specified seconds. The parameter has no effect if flow control
+   is disabled.
+
+   The specified value must be greater than 0.
+
+   In general, the default settings should suffice; however, if
+   modifying from the default value, decreasing, rather than
+   increasing, the value may prove to be more useful.
+
+.. parameter:: flowControlWarnThresholdSeconds
+
+   .. versionadded:: 4.2
+
+   *Type*: integer
+ 
+   *Default*: 10
+
+   The amount of time to wait to log a warning once the flow control
+   mechanism detects the majority commit point has not moved.
+
+   The specified value must be greater than or equal to 0, with 0 to
+   disable warnings. 
+   
 .. parameter:: oplogInitialFindMaxSeconds
 
    .. versionadded:: 3.6
@@ -1522,22 +1590,31 @@ Replication Parameters
 
 .. parameter:: rollbackTimeLimitSecs
 
-   .. versionadded:: 4.0
+   .. versionchanged:: 4.2
 
    *Type*: 64-bit integer
 
    *Default*: 86400  (1 day)
 
-   Maximum age of data that will be rolled back in the event of a
-   replication operations failure. If the time between the end of the
-   rolled back instance oplog and the common point (the last point where
-   the source node and the rolled back node had the same data) exceeds
-   this value, the rollback will fail. Note that negative values for
+   Maximum age of data that can be rolled back. Negative values for
    this parameter are not valid.
 
-   To set an effectively unlimited rollback period, set the value to
+   Starting in MongoDB 4.2, if the time between the end of the
+   to-be-rolledback instance's oplog and the first operation after the
+   common point (the last point where the source node and the
+   to-be-rolledback node had the same data) exceeds this value, the
+   rollback will fail.
+   
+   In MongoDB 4.0, if the time between the end of the to-be-rolledback
+   instance's oplog and the common point (the last point where the
+   source node and the to-be-rolledback node had the same data) exceeds
+   this value, the rollback will fail.
+
+   To effectively have an unlimited rollback period, set the value to
    ``2147483647`` which is the maximum value allowed and equivalent to
    roughly 68 years.
+
+   .. versionadded:: 4.0
 
 .. parameter:: waitForSecondaryBeforeNoopWriteMS
 
@@ -1875,6 +1952,79 @@ Sharding Parameters
    .. code-block:: sh
 
       mongos --setParameter ShardingTaskExecutorPoolRefreshTimeoutMS=30000
+
+.. parameter:: ShardingTaskExecutorPoolReplicaSetMatching
+
+   .. versionadded:: 4.2
+
+   Type: string
+
+   Default: "matchPrimaryNode"
+
+   |mongos-only|
+   
+   The policy that determines the minimum size limit of the
+   :binary:`~bin.mongos` instance's connection pools to the sharded
+   cluster's replica set secondaries.
+
+   Available values are:
+   
+   .. list-table::
+      :header-rows: 1
+      :widths: 15 85
+      
+      * - Matching Policy
+        - Description
+
+      * - ``"matchPrimaryNode"`` (Default)
+      
+        - For each replica set in the sharded cluster (i.e. shard
+          replica set and config servers), the minimum size limit of
+          the :binary:`~bin.mongos` instance's connection pool to each
+          secondary of that replica set is equal to the size of its
+          connection pool to the primary.
+
+          In case of primary stepdown, ``matchPrimaryNode`` ensures
+          that any secondary that becomes the primary can handle the
+          current level of primary reads and writes.
+
+      * - ``"matchBusiestNode"``
+
+        - For each replica set in the sharded cluster (i.e. shard
+          replica set and config servers), the minimum size limit of
+          the :binary:`~bin.mongos` instance's connection pool to each
+          member of that replica set is equal to the largest among
+          the active connections counts to the primary and each
+          secondary members.
+
+          With ``"matchBusiestNode"``, :binary:`~bin.mongos` maintains
+          enough connections to each secondary to handle the current
+          level of primary and secondary reads and writes. The number
+          of connections to maintain in the pool decreases as the
+          number of active connections decreases.
+
+      * - ``"disabled"``
+
+        - For each replica set in the sharded cluster (i.e. shard
+          replica set and config servers), the minimum number of
+          connections in the :binary:`~bin.mongos` instance's
+          connection pool to each secondary is equal to the
+          :parameter:`ShardingTaskExecutorPoolMinSize`.
+
+   The following example sets the
+   :parameter:`ShardingTaskExecutorPoolReplicaSetMatching` to
+   ``"matchBusiestNode"`` during startup:
+
+   .. code-block:: sh
+
+      mongod --setParameter ShardingTaskExecutorPoolReplicaSetMatching="matchBusiestNode"
+
+   During runtime, you can also set the parameter with the
+   :dbcommand:`setParameter` command:
+
+   .. code-block:: javascript
+
+      db.adminCommand( { setParameter: 1,  ShardingTaskExecutorPoolReplicaSetMatching: "matchBusiestNode" } )
 
 .. parameter:: taskExecutorPoolSize
 

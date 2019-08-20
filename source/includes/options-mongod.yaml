@@ -2378,11 +2378,8 @@ description: |
    Defines the maximum size of the internal cache that WiredTiger will
    use for all data. The memory consumed by an index build (see
    :parameter:`maxIndexBuildMemoryUsageMegabytes`) is separate from the
-   WiredTiger cache memory.
-
-
-   Starting in MongoDB 3.4, {{role}} values can range from 0.25 GB  to
-   10000 GB and can be a float.
+   WiredTiger cache memory. Starting in MongoDB 3.4, the values can range
+   from 0.25 GB  to 10000 GB and can be a float.
 
    .. include:: /includes/extracts/wt-cache-default-setting.rst
 
@@ -3293,8 +3290,28 @@ description: |
   the LDAP groups to which the authenticated user belongs to. The query is
   relative to the host or hosts specified in {{ldapServers}}.
 
-  Use the ``{USER}`` placeholder in the URL to substitute the authenticated
-  username, or the transformed username if a {{mapping}} is specified.
+  In the URL, you can use the following substituion tokens:
+
+  .. list-table::
+     :header-rows: 1
+     :widths: 20 80
+     
+     * - Substitution Token
+       - Description
+
+     * - ``{USER}`` 
+     
+       - Substitutes the authenticated username, or the
+         :setting:`transformed <security.ldap.userToDNMapping>`
+         username if a {{mapping}} is specified.
+
+     * - ``{PROVIDED_USER}``
+
+       - Substitutes the supplied username, i.e. before either
+         authentication or :setting:`LDAP transformation
+         <security.ldap.userToDNMapping>`.
+         
+         .. versionadded:: 4.2
 
   When constructing the query URL, ensure that the order of LDAP parameters
   respects RFC4516:
@@ -3417,12 +3434,21 @@ description: |
 
    .. versionadded:: 4.2
 
-   Outputs the resolved YAML configuration document for the {{program}}
-   to ``stdout`` and halts the {{program}} instance. For configuration
-   options using :ref:`externally-sourced-values`, {{role}} returns the
-   resolved value for those options. This may include any configured
-   passwords or secrets previously obfuscated through the external
-   source.
+   Outputs the {{program}} instance's configuration options, formatted
+   in YAML, to ``stdout`` and exits the {{program}} instance. For
+   configuration options that uses :ref:`externally-sourced-values`,
+   {{role}} returns the resolved value for those options.
+   
+   .. warning::
+      
+      This may include any configured passwords or secrets previously
+      obfuscated through the external source.
+   
+   For usage examples, see:
+      
+   - :ref:`expansion-directive-output`
+   
+   - :doc:`/tutorial/convert-command-line-options-to-yaml`
 
 optional: true
 ---
@@ -3528,4 +3554,43 @@ description: |
 optional: true
 replacement:
    file: ":option:`--kmipClientCertificateFile`"
+---
+program: mongod
+name: clusterIpSourceWhitelist
+args: <string>
+directive: option
+optional: true
+pre: |
+
+  .. versionadded:: 3.6
+
+  A list of IP addresses/CIDR (`Classless Inter-Domain Routing
+  <https://tools.ietf.org/html/rfc4632>`__) ranges against which the
+  :binary:`~bin.mongod` validates authentication requests from other members of
+  the replica set and, if part of a sharded cluster, the :binary:`~bin.mongos`
+  instances. The :binary:`~bin.mongod` verifies that the originating IP is
+  either explicitly in the list or belongs to a CIDR range in the list. If the
+  IP address is not present, the server does not authenticate the
+  :binary:`~bin.mongod` or :binary:`~bin.mongos`.
+
+  {{role}} has no effect on a :binary:`~bin.mongod` started without
+  :ref:`authentication <authentication>`.
+
+description: |
+
+  {{role}} accepts multiple comma-separated IPv4/6 addresses or Classless
+  Inter-Domain Routing (`CIDR <https://tools.ietf.org/html/rfc4632>`_) ranges:
+
+  .. code-block:: shell
+
+     mongod --clusterIpSourceWhitelist 192.0.2.0/24,127.0.0.1,::1
+
+post: |
+
+  .. important::
+
+     Ensure {{role}} includes the IP address *or* CIDR ranges that include the
+     IP address of each replica set member or :binary:`~bin.mongos` in the
+     deployment to ensure healthy communication between cluster components.
+
 ...

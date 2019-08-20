@@ -16,8 +16,6 @@ Install MongoDB Community Edition on Ubuntu
 Overview
 --------
 
-.. include:: /includes/rc-install.rst
-
 .. _`MongoDB Download Center`: https://www.mongodb.com/download-center/community?jmp=docs
 
 The following tutorial uses a package manager to install MongoDB
@@ -44,8 +42,10 @@ Platform Support
 
 .. note::
 
-   Starting in version 4.2, MongoDB Community removes support on Ubuntu
-   16.04 ARM64.
+   - MongoDB 4.2 removes support for Ubuntu 14.04.
+
+   - Starting in version 4.2, MongoDB Community removes support on
+     Ubuntu 16.04 ARM64.
 
 .. include:: /includes/fact-ubuntu-lts-support.rst
 

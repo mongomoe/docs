@@ -80,12 +80,12 @@ Recommended Platforms
 While MongoDB supports a variety of platforms, the following operating
 systems are recommended for production use:
 
-- Amazon Linux
-- Debian 8
-- RHEL / CentOS 6.2+
+- Amazon Linux 2
+- Debian 9
+- RHEL / CentOS 6 and 7
 - SLES 12
-- Ubuntu LTS 16.04
-- Windows Server 2012 R2
+- Ubuntu LTS 16.04 and 18.04
+- Windows Server 2016
 
 .. seealso:: :ref:`prod-notes-platform-considerations`
 
@@ -100,7 +100,9 @@ All MongoDB releases are available on the `MongoDB Download Center
 current stable release, even if you are installing via a package
 manager.
 
-.. include:: /includes/list-table-products-supported-architecture.rst
+For other MongoDB products, refer either to the `MongoDB Download
+Center <https://www.mongodb.com/download-center?jmp=docs#production>`_
+page or their `respective documentation <https://docs.mongodb.com/?jmp=docs>`_.
 
 MongoDB ``dbPath``
 ------------------

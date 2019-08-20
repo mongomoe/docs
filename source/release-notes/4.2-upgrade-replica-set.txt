@@ -12,8 +12,6 @@ Upgrade a Replica Set to 4.2
    :depth: 1
    :class: singlecol
 
-.. include:: /includes/in-dev.rst
-
 .. include:: /includes/4.2-upgrade-replacements.rst
 
 .. include:: /includes/upgrade-copy.rst
@@ -149,7 +147,11 @@ individually while the other members are available.
 Post Upgrade
 ------------
 
-.. include:: /includes/extracts/4.2-changes-options-tls-ssl-upgrade.rst
+``TLS`` Options Replace Deprecated ``SSL`` Options
+  .. include:: /includes/extracts/4.2-changes-options-tls-ssl-upgrade.rst
+
+4.2-Compatible Drivers Retry Writes by Default
+  .. include:: /includes/extracts/4.2-changes-drivers-retryWrites-default.rst
 
 Additional Upgrade Procedures
 -----------------------------
